@@ -279,11 +279,11 @@ export default function WhatsappGame({ setGame }: Props) {
               Volte no tempo! Vocês ainda não estão juntos. Neste jogo,{" "}
               <span className="font-bold text-[#008069]">VOCÊ É O MARCOS</span>{" "}
               (o futuro marido), tentando conquistar a Brunna com o papo lá no
-              começo de tudo[cite: 14].
+              começo de tudo.
               <br />
               <br />
               Será que você consegue mandar a mensagem ideal que irá
-              conquistá-la?[cite: 14]
+              conquistá-la?
             </p>
 
             <button
