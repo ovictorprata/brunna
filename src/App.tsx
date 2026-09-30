@@ -18,7 +18,7 @@ export default function App() {
       {currentGame === "maze" && <MazeGame setGame={setCurrentGame} />}
       {currentGame === "clean" && <CleanGame setGame={setCurrentGame} />}
       {currentGame === "copa" && <CopaGame setGame={setCurrentGame} />}
-      {currentGame === "baby" && <BabyGame setGame={setCurrentGame} />}
+      {currentGame === "bebe" && <BabyGame setGame={setCurrentGame} />}
       {currentGame === "quiz" && <QuizGame setGame={setCurrentGame} />}
       {currentGame === "peixe" && <FishGame setGame={setCurrentGame} />}
     </>
