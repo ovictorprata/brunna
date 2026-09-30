@@ -44,6 +44,12 @@ export default function Hub({ setGame }: Props) {
         >
           👶 Jogo do Bebê
         </button>
+        <button
+          onClick={() => setGame("quiz")}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-xl font-bold shadow-md transition transform hover:scale-105"
+        >
+          ? Quiz
+        </button>
       </div>
     </div>
   );
