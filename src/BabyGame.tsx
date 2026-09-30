@@ -448,8 +448,8 @@ export default function BabyGame({ setGame }: Props) {
 
             <p className="text-gray-800 font-bold mb-6 text-lg bg-gray-100 p-4 rounded-xl border border-gray-300">
               Pisei no seu pé! Você se mexeu bem na hora que eu estava olhando.
-              O ciúme falou mais alto. Ainda bem que eu sou um anjinho e jamais
-              faria isso.
+              O ciúme falou mais alto (é o que dizem). Ainda bem que eu sou um
+              anjinho e jamais faria isso.
               <br />
               <br />
               <span className="text-sm font-normal text-gray-600">
