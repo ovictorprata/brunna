@@ -213,7 +213,7 @@ export default function Hub({ setGame }: Props) {
             </h2>
 
             <p className="text-gray-300 text-sm mb-8 leading-relaxed bg-white/10 p-5 rounded-2xl border border-white/10 backdrop-blur-md">
-              Vamos ver o que tem de micooooo
+              LIGUE O SOMMMM
             </p>
 
             <button
