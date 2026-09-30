@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import rostoImg from "./assets/maze_game/rosto.png";
 
+// Áudios do WhatsApp
+import envioSound from "./assets/jump_game/zap_envio.mp3";
+import recebidoSound from "./assets/jump_game/zap_recebido.mp3";
+
 interface Props {
   setGame: (game: string) => void;
 }
@@ -12,7 +16,7 @@ type Message = {
   time: string;
 };
 
-// Mensagens apenas do Marcos (tentando puxar assunto sem sucesso ainda)
+// Mensagens iniciais do Marcos tentando desenrolar assunto
 const INITIAL_MESSAGES: Message[] = [
   { id: 1, text: "Bom diaaa!", sender: "me", time: "10:00" },
   {
@@ -30,6 +34,8 @@ export default function WhatsappGame({ setGame }: Props) {
   const [isTyping, setIsTyping] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const envioAudioRef = useRef<HTMLAudioElement>(null);
+  const recebidoAudioRef = useRef<HTMLAudioElement>(null);
 
   // Scroll automático para a última mensagem
   const scrollToBottom = () => {
@@ -50,6 +56,12 @@ export default function WhatsappGame({ setGame }: Props) {
     if (e) e.preventDefault();
     if (!inputValue.trim()) return;
 
+    // Dispara o som de envio do WhatsApp
+    if (envioAudioRef.current) {
+      envioAudioRef.current.currentTime = 0;
+      envioAudioRef.current.play().catch(() => {});
+    }
+
     const newUserMsg: Message = {
       id: Date.now(),
       text: inputValue.trim(),
@@ -61,8 +73,13 @@ export default function WhatsappGame({ setGame }: Props) {
     setInputValue("");
     setIsTyping(true);
 
-    // O charme do "digitando..."
+    // Brunna digita por 1.8 segundos e depois responde com som de recebimento
     setTimeout(() => {
+      if (recebidoAudioRef.current) {
+        recebidoAudioRef.current.currentTime = 0;
+        recebidoAudioRef.current.play().catch(() => {});
+      }
+
       const newBrunnaMsg: Message = {
         id: Date.now() + 1,
         text: "mas...quais são as suas intenções comigo?",
@@ -72,11 +89,15 @@ export default function WhatsappGame({ setGame }: Props) {
 
       setMessages((prev) => [...prev, newBrunnaMsg]);
       setIsTyping(false);
-    }, 1800); // 1.8 segundos de tensão
+    }, 1800);
   };
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-[#efeae2] flex flex-col font-sans select-none">
+      {/* Elementos de Áudio */}
+      <audio ref={envioAudioRef} src={envioSound} />
+      <audio ref={recebidoAudioRef} src={recebidoSound} />
+
       {/* PADRÃO DE FUNDO DO WHATSAPP */}
       <div
         className="absolute inset-0 z-0 opacity-[0.08] pointer-events-none"
@@ -86,40 +107,44 @@ export default function WhatsappGame({ setGame }: Props) {
         }}
       ></div>
 
-      {/* HEADER TIPO WHATSAPP */}
-      <div className="bg-[#008069] text-white flex items-center px-2 py-3 z-20 shadow-md">
-        <button
-          onClick={() => setGame("hub")}
-          className="flex items-center p-1 rounded-full active:bg-white/20 transition-colors"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6"
+      {/* HEADER TIPO WHATSAPP COM BOTÃO VOLTAR MAIS EXPLÍCITO */}
+      <div className="bg-[#008069] text-white flex items-center justify-between px-3 py-2.5 z-20 shadow-md">
+        <div className="flex items-center gap-2">
+          {/* Botão Voltar Evidente */}
+          <button
+            onClick={() => setGame("hub")}
+            className="flex items-center gap-1.5 bg-black/20 hover:bg-black/30 px-3 py-1.5 rounded-full active:scale-95 transition-all text-xs font-black tracking-wider uppercase border border-white/20"
           >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            <span>Voltar</span>
+          </button>
 
-        <div className="flex items-center ml-2 cursor-pointer">
-          <div className="w-10 h-10 rounded-full bg-white/20 overflow-hidden flex items-center justify-center border border-white/30 mr-3">
-            <img
-              src={rostoImg}
-              alt="Brunna"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-base leading-tight tracking-wide">
-              Brunna
-            </span>
-            <span className="text-xs text-white/80 font-medium">
-              {isTyping ? "digitando..." : "visto por último hoje às 14:35"}
-            </span>
+          <div className="flex items-center ml-1">
+            <div className="w-10 h-10 rounded-full bg-white/20 overflow-hidden flex items-center justify-center border border-white/30 mr-2.5 shrink-0">
+              <img
+                src={rostoImg}
+                alt="Brunna"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-sm md:text-base leading-tight tracking-wide">
+                Brunna
+              </span>
+              <span className="text-[11px] text-white/80 font-medium leading-none mt-0.5">
+                {isTyping ? "digitando..." : "online"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -238,7 +263,7 @@ export default function WhatsappGame({ setGame }: Props) {
         )}
       </div>
 
-      {/* MODAL DE INTRODUÇÃO (A História e o Contexto) */}
+      {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in zoom-in backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center border-b-8 border-[#008069]">
@@ -254,11 +279,11 @@ export default function WhatsappGame({ setGame }: Props) {
               Volte no tempo! Vocês ainda não estão juntos. Neste jogo,{" "}
               <span className="font-bold text-[#008069]">VOCÊ É O MARCOS</span>{" "}
               (o futuro marido), tentando conquistar a Brunna com o papo lá no
-              começo de tudo.
+              começo de tudo[cite: 14].
               <br />
               <br />
               Será que você consegue mandar a mensagem ideal que irá
-              conquistá-la?
+              conquistá-la?[cite: 14]
             </p>
 
             <button

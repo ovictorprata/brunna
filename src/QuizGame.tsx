@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 
-// Imagem da Brunna (estilo 8-bit / pixel art) e áudios
+// Imagens e áudios
 import rostoImg from "./assets/maze_game/rosto.png";
 import victoriaSound from "./assets/jump_game/parabens.mp3";
 import tristezaSound from "./assets/jump_game/tristeza.mp3";
 import burraImg from "./assets/maze_game/burra.png";
+
+import quizMusic from "./assets/jump_game/quiz.mp3";
+import corretoSound from "./assets/jump_game/correto.mp3";
+import erradoSound from "./assets/jump_game/errado.mp3";
 
 interface Props {
   setGame: (game: string) => void;
@@ -103,6 +107,9 @@ export default function QuizGame({ setGame }: Props) {
 
   const tristezaRef = useRef<HTMLAudioElement>(null);
   const parabensRef = useRef<HTMLAudioElement>(null);
+  const bgMusicRef = useRef<HTMLAudioElement>(null);
+  const corretoRef = useRef<HTMLAudioElement>(null);
+  const erradoRef = useRef<HTMLAudioElement>(null);
 
   const currentQ = QUESTIONS[currentQIndex];
 
@@ -114,6 +121,15 @@ export default function QuizGame({ setGame }: Props) {
 
     if (index === currentQ.correctIndex) {
       setScore((prev) => prev + 1);
+      if (corretoRef.current) {
+        corretoRef.current.currentTime = 0;
+        corretoRef.current.play().catch(() => {});
+      }
+    } else {
+      if (erradoRef.current) {
+        erradoRef.current.currentTime = 0;
+        erradoRef.current.play().catch(() => {});
+      }
     }
   };
 
@@ -125,6 +141,11 @@ export default function QuizGame({ setGame }: Props) {
       setCurrentQIndex((prev) => prev + 1);
     } else {
       setIsFinished(true);
+
+      if (bgMusicRef.current) {
+        bgMusicRef.current.pause();
+      }
+
       if (tristezaRef.current) {
         tristezaRef.current.currentTime = 0;
         tristezaRef.current.play().catch(() => {});
@@ -150,6 +171,15 @@ export default function QuizGame({ setGame }: Props) {
     }
   }, [isFinished]);
 
+  const startQuiz = () => {
+    setHasStarted(true);
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = 0.35;
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
+  };
+
   const restartQuiz = () => {
     setHasStarted(true);
     setCurrentQIndex(0);
@@ -157,14 +187,28 @@ export default function QuizGame({ setGame }: Props) {
     setScore(0);
     setShowComment(false);
     setIsFinished(false);
+
+    if (tristezaRef.current) {
+      tristezaRef.current.pause();
+      tristezaRef.current.currentTime = 0;
+    }
+
+    if (bgMusicRef.current) {
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
   };
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-zinc-950 select-none font-mono flex flex-col items-center justify-between p-4 text-white">
+      {/* Elementos de Áudio */}
+      <audio ref={bgMusicRef} src={quizMusic} loop />
+      <audio ref={corretoRef} src={corretoSound} />
+      <audio ref={erradoRef} src={erradoSound} />
       <audio ref={tristezaRef} src={tristezaSound} />
       <audio ref={parabensRef} src={victoriaSound} />
 
-      {/* Topo / Status Bar Retro Minimalista */}
+      {/* Topo / Status Bar Minimalista */}
       <div className="w-full max-w-md flex items-center justify-between z-30 pt-2 pb-4">
         <button
           onClick={() => setGame("hub")}
@@ -198,7 +242,7 @@ export default function QuizGame({ setGame }: Props) {
             </p>
           </div>
 
-          {/* Alternativas Limpas */}
+          {/* Alternativas */}
           <div className="flex flex-col gap-3">
             {currentQ.options.map((option, idx) => {
               let btnStyle =
@@ -252,7 +296,7 @@ export default function QuizGame({ setGame }: Props) {
         </div>
       )}
 
-      {/* MODAL DE INTRODUÇÃO (MINIMALISTA) */}
+      {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in zoom-in">
           <div className="bg-zinc-950 rounded-xl p-8 max-w-md w-full shadow-2xl text-center border border-zinc-800">
@@ -278,7 +322,7 @@ export default function QuizGame({ setGame }: Props) {
             </p>
 
             <button
-              onClick={() => setHasStarted(true)}
+              onClick={startQuiz}
               className="w-full bg-white text-black py-4 mt-4 rounded-lg font-black text-sm uppercase tracking-widest hover:bg-gray-200 transition-colors"
             >
               Iniciar Prova
@@ -287,16 +331,16 @@ export default function QuizGame({ setGame }: Props) {
         </div>
       )}
 
-      {/* BOLETIM FINAL (MINIMALISTA E FOCADO NA RECUPERAÇÃO) */}
+      {/* BOLETIM FINAL */}
       {isFinished && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in zoom-in">
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl text-center relative max-h-[95vh] overflow-y-auto">
-            {/* Stamp Redesenhado - Agressivo, Sem Bordas Extras */}
+            {/* Stamp Recuperação */}
             <div className="absolute top-6 -right-2 md:-right-6 rotate-[15deg] bg-red-600 text-white font-black px-6 py-2 text-xl md:text-2xl uppercase tracking-widest shadow-2xl z-30">
               RECUPERAÇÃO
             </div>
 
-            {/* Imagem Gigante Limpa */}
+            {/* Imagem Burra em Destaque */}
             <div className="flex justify-center mb-6 pt-4 relative z-20">
               <img
                 src={burraImg}
@@ -312,7 +356,7 @@ export default function QuizGame({ setGame }: Props) {
               Aluna: Brunna
             </p>
 
-            {/* Tabela Minimalista */}
+            {/* Tabela de Notas */}
             <div className="w-full font-mono text-sm px-2">
               <div className="flex justify-between text-zinc-500 border-b border-zinc-800 pb-2 mb-2 uppercase text-[10px] font-black tracking-wider">
                 <span>Disciplina</span>
