@@ -97,7 +97,7 @@ export default function QuizGame({ setGame }: Props) {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
+  const [, setScore] = useState(0);
   const [showComment, setShowComment] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
 

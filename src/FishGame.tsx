@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import peixeVivo from "./assets/jump_game/peixe_vivo.png";
 import peixeMorto from "./assets/jump_game/peixe_morto.png";
 import toddyImg from "./assets/jump_game/toddy.png";
-import racaoImg from "./assets/jump_game/racao.png";
+import racaoImg from "./assets/jump_game/racao_peixe.png";
 
+// Importando os áudios
 import tristezaSound from "./assets/jump_game/tristeza.mp3";
+import peixeMusic from "./assets/jump_game/peixe.mp3";
 
 interface Props {
   setGame: (game: string) => void;
@@ -15,6 +17,8 @@ interface Props {
 export default function FishGame({ setGame }: Props) {
   const [hasStarted, setHasStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [isTimeOut, setIsTimeOut] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [score, setScore] = useState(0);
 
   const [isDead, setIsDead] = useState(false);
@@ -26,6 +30,28 @@ export default function FishGame({ setGame }: Props) {
   const [swapButtons, setSwapButtons] = useState(false);
 
   const tristezaRef = useRef<HTMLAudioElement>(null);
+  const bgMusicRef = useRef<HTMLAudioElement>(null);
+
+  // Timer regressivo de 30 segundos
+  useEffect(() => {
+    if (!hasStarted || gameOver || isTimeOut) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsTimeOut(true);
+          setGameOver(true);
+
+          if (bgMusicRef.current) bgMusicRef.current.pause();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [hasStarted, gameOver, isTimeOut]);
 
   // Movimento do Joca
   useEffect(() => {
@@ -54,7 +80,7 @@ export default function FishGame({ setGame }: Props) {
 
   // Dar Ração
   const feedRacao = () => {
-    if (isDead || !hasStarted) return;
+    if (isDead || !hasStarted || gameOver) return;
 
     const newId = Date.now() + Math.random();
     setFeedEffects((prev) => [
@@ -77,7 +103,7 @@ export default function FishGame({ setGame }: Props) {
 
   // Dar Toddy
   const feedToddy = () => {
-    if (isDead || !hasStarted) return;
+    if (isDead || !hasStarted || gameOver) return;
 
     const newId = Date.now() + Math.random();
     setFeedEffects((prev) => [
@@ -86,6 +112,8 @@ export default function FishGame({ setGame }: Props) {
     ]);
 
     setIsDead(true);
+
+    if (bgMusicRef.current) bgMusicRef.current.pause();
 
     if (tristezaRef.current) {
       tristezaRef.current.currentTime = 0;
@@ -99,19 +127,39 @@ export default function FishGame({ setGame }: Props) {
     }, 1500);
   };
 
-  const startGame = () => setHasStarted(true);
+  const startGame = () => {
+    setHasStarted(true);
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = 0.35;
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
+  };
 
   const restartGame = () => {
     setScore(0);
+    setTimeLeft(30);
+    setIsTimeOut(false);
     setIsDead(false);
     setGameOver(false);
     setSwapButtons(false);
     setFeedEffects([]);
     setFishPos({ x: 50, y: 50, flip: false });
+
+    if (tristezaRef.current) {
+      tristezaRef.current.pause();
+      tristezaRef.current.currentTime = 0;
+    }
+
+    if (bgMusicRef.current) {
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
   };
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden select-none touch-none bg-blue-950 font-sans flex flex-col">
+      <audio ref={bgMusicRef} src={peixeMusic} loop />
       <audio ref={tristezaRef} src={tristezaSound} />
 
       <style>{`
@@ -134,22 +182,42 @@ export default function FishGame({ setGame }: Props) {
         <div className="absolute bottom-0 left-16 w-3 h-24 bg-green-400 rounded-t-full blur-[1px] opacity-90 skew-x-6"></div>
         <div className="absolute bottom-0 right-10 w-6 h-40 bg-emerald-600 rounded-t-full blur-[2px] opacity-80 skew-x-12"></div>
 
+        {/* UI Superior */}
         <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-40">
           <button
             onClick={() => setGame("hub")}
-            className="px-6 py-2 bg-white/90 text-blue-700 font-extrabold rounded-full shadow-lg active:scale-95 transition-all"
+            className="px-5 py-2 bg-white/90 text-blue-700 font-extrabold rounded-full shadow-lg active:scale-95 transition-all text-sm"
           >
             ← Voltar
           </button>
 
           {hasStarted && (
-            <div className="bg-white/90 px-6 py-2 rounded-full shadow-lg text-center flex flex-col items-center">
-              <span className="text-xs font-black text-blue-400 uppercase tracking-widest">
-                Dias Vivo
-              </span>
-              <span className="text-3xl font-black text-blue-700 leading-none">
-                {score}
-              </span>
+            <div className="flex gap-2">
+              <div
+                className={`bg-white/95 px-4 py-2 rounded-2xl shadow-lg text-center flex flex-col items-center ${
+                  timeLeft <= 5 ? "animate-pulse border-2 border-red-500" : ""
+                }`}
+              >
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  Tempo
+                </span>
+                <span
+                  className={`text-2xl font-black leading-none ${
+                    timeLeft <= 5 ? "text-red-600" : "text-amber-500"
+                  }`}
+                >
+                  {timeLeft}s
+                </span>
+              </div>
+
+              <div className="bg-white/95 px-4 py-2 rounded-2xl shadow-lg text-center flex flex-col items-center">
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                  Dias Vivo
+                </span>
+                <span className="text-2xl font-black text-blue-700 leading-none">
+                  {score}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -185,7 +253,13 @@ export default function FishGame({ setGame }: Props) {
             backgroundImage: `url(${isDead ? peixeMorto : peixeVivo})`,
             left: `${fishPos.x}%`,
             top: `${fishPos.y}%`,
-            transform: `translate(-50%, -50%) ${isDead ? "rotate(180deg)" : fishPos.flip ? "rotateY(180deg)" : "rotateY(0deg)"}`,
+            transform: `translate(-50%, -50%) ${
+              isDead
+                ? "rotate(180deg)"
+                : fishPos.flip
+                  ? "rotateY(180deg)"
+                  : "rotateY(0deg)"
+            }`,
             transition: isDead
               ? "top 1.5s ease-out, transform 0.5s"
               : "top 2s ease-in-out, left 2s ease-in-out, transform 0.3s",
@@ -207,19 +281,25 @@ export default function FishGame({ setGame }: Props) {
 
       {/* CONTROLES: BASE DA TELA */}
       <div className="w-full h-[25vh] flex flex-col justify-center relative pb-safe">
-        {hasStarted && !isDead && (
+        {hasStarted && !isDead && !gameOver && (
           <div className="absolute top-2 w-full text-center text-blue-300 font-bold text-xs tracking-widest uppercase animate-pulse">
-            O Joca está com fome...
+            O Joca está com fome... rápido!
           </div>
         )}
 
         <div
-          className={`flex w-full h-full gap-4 px-8 items-center justify-center ${swapButtons ? "flex-row-reverse" : "flex-row"} transition-all duration-300`}
+          className={`flex w-full h-full gap-4 px-8 items-center justify-center ${
+            swapButtons ? "flex-row-reverse" : "flex-row"
+          } transition-all duration-300`}
         >
           <button
             onClick={feedRacao}
-            disabled={!hasStarted || isDead}
-            className={`flex-1 flex justify-center items-center h-3/4 max-w-[150px] active:scale-90 transition-transform ${!hasStarted || isDead ? "opacity-50 grayscale" : "hover:scale-105"}`}
+            disabled={!hasStarted || isDead || gameOver}
+            className={`flex-1 flex justify-center items-center h-3/4 max-w-[150px] active:scale-90 transition-transform ${
+              !hasStarted || isDead || gameOver
+                ? "opacity-50 grayscale"
+                : "hover:scale-105"
+            }`}
           >
             <img
               src={racaoImg}
@@ -230,8 +310,12 @@ export default function FishGame({ setGame }: Props) {
 
           <button
             onClick={feedToddy}
-            disabled={!hasStarted || isDead}
-            className={`flex-1 flex justify-center items-center h-3/4 max-w-[150px] active:scale-90 transition-transform ${!hasStarted || isDead ? "opacity-50 grayscale" : "hover:scale-105"}`}
+            disabled={!hasStarted || isDead || gameOver}
+            className={`flex-1 flex justify-center items-center h-3/4 max-w-[150px] active:scale-90 transition-transform ${
+              !hasStarted || isDead || gameOver
+                ? "opacity-50 grayscale"
+                : "hover:scale-105"
+            }`}
           >
             <img
               src={toddyImg}
@@ -242,7 +326,7 @@ export default function FishGame({ setGame }: Props) {
         </div>
       </div>
 
-      {/* MODAL DE INTRODUÇÃO (A História do Joca) */}
+      {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in zoom-in duration-500">
           <div className="bg-white rounded-[2rem] p-6 max-w-md w-full shadow-[0_15px_60px_-15px_rgba(0,0,0,1)] text-center border-4 border-cyan-400 max-h-[90vh] overflow-y-auto">
@@ -251,14 +335,10 @@ export default function FishGame({ setGame }: Props) {
             </h2>
 
             <p className="text-gray-700 font-medium my-4 leading-relaxed text-sm md:text-base bg-cyan-50 p-4 rounded-xl border border-cyan-100">
-              Lembra do Joca? Nosso amado peixinho que vivia em paz no
-              aquário... Até o dia em que você, com sua brilhante mente de
-              criança, achou que a água dele estava muito "sem graça" e decidiu
-              que ele merecia provar um pouco do seu achocolatado.
-              <br />
-              <br />
-              Você literalmente achocolatou o coitado! Agora, como penitência,
-              você tem a missão de alimentar um novo Joca.
+              Você tem apenas{" "}
+              <span className="font-black text-cyan-700">30 segundos</span> para
+              alimentar o Joca o máximo que conseguir sem deixar ele provar
+              achocolatado de novo!
             </p>
 
             <div className="bg-gray-50 p-4 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-sm font-bold text-left text-gray-700">
@@ -266,24 +346,26 @@ export default function FishGame({ setGame }: Props) {
                 <img
                   src={racaoImg}
                   className="w-10 h-10 object-contain drop-shadow-md"
+                  alt="Ração"
                 />
                 <p>
-                  <span className="text-orange-500">RAÇÃO:</span> O Joca vive
-                  para nadar mais um dia.
+                  <span className="text-orange-500">RAÇÃO:</span> +1 dia de vida
+                  para o Joca.
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <img
                   src={toddyImg}
                   className="w-10 h-10 object-contain drop-shadow-md"
+                  alt="Toddy"
                 />
                 <p>
-                  <span className="text-yellow-900">TODDY:</span> Morte
-                  instantânea por overdose de chocolate. 💀
+                  <span className="text-yellow-900">TODDY:</span> Overdose de
+                  chocolate imediata. 💀
                 </p>
               </div>
               <p className="mt-4 text-xs text-red-600 text-center font-black animate-pulse bg-red-100 p-2 rounded-lg">
-                CUIDADO: OS BOTÕES TROCAM DE LUGAR PARA TESTAR SEUS REFLEXOS!
+                CUIDADO: OS BOTÕES TROCAM DE LUGAR EM ALTA VELOCIDADE!
               </p>
             </div>
 
@@ -291,49 +373,69 @@ export default function FishGame({ setGame }: Props) {
               onClick={startGame}
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-4 rounded-2xl font-black text-xl border-b-4 border-cyan-700 uppercase shadow-sm active:translate-y-1 active:border-b-0 transition-all"
             >
-              Tentar Redimir seus Pecados 🐠
+              Iniciar Corrida (30s) ⏱️
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL DE GAME OVER (Zueira pesada) */}
+      {/* MODAL DE FIM DE JOGO - REDESIGN MODERNO */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in delay-500">
-          <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl text-center border-4 border-yellow-900 transform transition-all">
-            <div className="w-full flex justify-center mb-6 mt-2">
-              <div className="p-4 bg-blue-100 shadow-inner rounded-full border-4 border-blue-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-5 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-7 md:p-8 max-w-sm w-full shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] text-center flex flex-col items-center border border-slate-100">
+            {/* Avatar em Destaque */}
+            <div className="mb-5 relative">
+              <div className="w-40 h-40 bg-slate-50 rounded-full flex items-center justify-center p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100/80">
                 <img
-                  src={peixeMorto}
-                  alt="Joca Morto"
-                  className="w-24 h-24 object-contain transform rotate-180 drop-shadow-lg"
+                  src={isTimeOut && !isDead ? peixeVivo : peixeMorto}
+                  alt="Status do Joca"
+                  className={`w-28 h-28 object-contain transition-transform duration-300 drop-shadow-md ${
+                    isDead ? "rotate-180 scale-105" : "scale-100"
+                  }`}
                 />
               </div>
             </div>
 
-            <h2 className="text-3xl font-black text-yellow-900 mb-4 uppercase">
-              VOCÊ MATOU O JOCA! DE NOVO! 🧃💀
+            {/* Título */}
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
+              {isTimeOut && !isDead ? "Tempo Esgotado" : "Você Matou o Joca"}
             </h2>
 
-            <p className="text-gray-800 font-bold mb-6 text-sm bg-yellow-50 p-4 rounded-xl border border-yellow-200">
-              A história se repete! O coitado mal teve tempo de processar o
-              açúcar. Faleceu nadando em puro chocolate porque você não consegue
-              distinguir comida de peixe de achocolatado. Você é um monstro!
-            </p>
-
-            <div className="bg-gray-100 p-4 mb-6 border-2 border-dashed border-gray-300 rounded-xl">
-              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
-                Dias que o Joca sobreviveu
+            {/* Descrição */}
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 w-full border border-slate-100">
+              <p className="text-slate-600 text-xs md:text-sm font-medium leading-relaxed">
+                {isTimeOut && !isDead
+                  ? "Os 30 segundos acabaram e você conseguiu mantê-lo vivo longe do Toddy!"
+                  : "Faleceu afogado em puro achocolatado mais uma vez. O trauma de infância segue intacto."}
               </p>
-              <p className="text-5xl font-black text-blue-600">{score}</p>
             </div>
 
-            <button
-              onClick={restartGame}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-sm md:text-base border-b-4 border-blue-800 uppercase shadow-sm active:translate-y-1 active:border-b-0 transition-all"
-            >
-              Comprar outro peixe e tentar de novo 😭
-            </button>
+            {/* Placar Minimalista */}
+            <div className="flex flex-col items-center justify-center mb-7">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Dias Sobrevividos
+              </span>
+              <span className="text-5xl font-black text-blue-600 tracking-tight leading-none">
+                {score}
+              </span>
+            </div>
+
+            {/* Ações */}
+            <div className="flex flex-col gap-2.5 w-full">
+              <button
+                onClick={restartGame}
+                className="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+              >
+                Tentar de Novo
+              </button>
+
+              <button
+                onClick={() => setGame("hub")}
+                className="w-full bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all"
+              >
+                Voltar ao Menu
+              </button>
+            </div>
           </div>
         </div>
       )}

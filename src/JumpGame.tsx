@@ -25,6 +25,7 @@ import pulando6g from "./assets/jump_game/pulando_6g.png";
 
 import finalImg from "./assets/jump_game/final.png";
 import pirulitoMusic from "./assets/jump_game/pirulito.mp3";
+import tristezaSound from "./assets/jump_game/tristeza.mp3";
 
 interface Props {
   setGame: (game: string) => void;
@@ -44,6 +45,7 @@ export default function JumpGame({ setGame }: Props) {
   const [isAscending, setIsAscending] = useState(false);
   const jumpRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const tristezaRef = useRef<HTMLAudioElement>(null);
 
   const [introFrame, setIntroFrame] = useState(0);
   const [runFrame, setRunFrame] = useState(0);
@@ -101,6 +103,17 @@ export default function JumpGame({ setGame }: Props) {
     }, 150);
     return () => clearInterval(interval);
   }, [hasStarted, gameOver, isJumping]);
+
+  // Efeito ao perder: pausa a música normal e toca o som triste
+  useEffect(() => {
+    if (gameOver) {
+      if (audioRef.current) audioRef.current.pause();
+      if (tristezaRef.current) {
+        tristezaRef.current.currentTime = 0;
+        tristezaRef.current.play().catch(() => {});
+      }
+    }
+  }, [gameOver]);
 
   useEffect(() => {
     if (!gameOver || !hasStarted) return;
@@ -205,6 +218,7 @@ export default function JumpGame({ setGame }: Props) {
       onClick={jump}
     >
       <audio ref={audioRef} src={pirulitoMusic} loop />
+      <audio ref={tristezaRef} src={tristezaSound} />
 
       <div className="absolute top-1/4 left-10 w-32 h-8 bg-white/20 rounded-full blur-sm"></div>
       <div className="absolute top-1/3 right-1/4 w-48 h-12 bg-white/10 rounded-full blur-md"></div>
@@ -316,59 +330,79 @@ export default function JumpGame({ setGame }: Props) {
         </div>
       )}
 
-      {/* MODAL DE FIM DE JOGO - VISUAL PREMIUM */}
+      {/* MODAL DE FIM DE JOGO */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div
-            className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] text-center relative overflow-hidden transform transition-all border border-white/50"
+            className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] text-center relative overflow-hidden transform transition-all border border-white/50"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Decoração superior com gradiente vivo */}
+            {/* Decoração superior */}
             <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></div>
 
-            {/* Imagem estilo Polaroid com rotação e sombra */}
-            <div className="w-full flex justify-center mb-6 mt-4">
+            {/* Imagem Polaroid */}
+            <div className="w-full flex justify-center mb-5 mt-3">
               <div className="p-3 bg-white rounded-2xl shadow-xl transform rotate-[-3deg] hover:rotate-0 transition-transform duration-300 border border-gray-100">
                 <img
                   src={finalImg}
                   alt="Brunna caída"
-                  className="w-full max-h-40 object-contain rounded-lg bg-gray-50/50"
+                  className="w-full max-h-36 object-contain rounded-lg bg-gray-50/50"
                 />
               </div>
             </div>
 
-            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 mb-2 leading-tight drop-shadow-sm">
+            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 mb-2 leading-tight drop-shadow-sm">
               Parabéns, Brunna!
             </h2>
 
-            <p className="text-gray-600 font-semibold mb-6 leading-relaxed text-sm md:text-base px-2">
+            <p className="text-gray-600 font-semibold mb-5 leading-relaxed text-sm px-2">
               A prova viva de que você continua caindo na vida, mas pelo menos
               hoje tem bolo! 🎂 Felicidades!
             </p>
 
-            {/* Caixa de pontuação com gradiente suave */}
-            <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-3xl p-5 mb-8 border border-indigo-100 shadow-inner">
+            {/* Pontuação */}
+            <div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl p-4 mb-6 border border-indigo-100 shadow-inner">
               <p className="text-xs text-indigo-400 uppercase tracking-widest font-black mb-1">
                 Pontuação Final
               </p>
-              <p className="text-6xl font-black text-indigo-600 drop-shadow-sm animate-pulse">
+              <p className="text-5xl font-black text-indigo-600 drop-shadow-sm animate-pulse">
                 {score}
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                setScore(0);
-                setObstacleLeft(window.innerWidth + 50);
-                setFallFrame(0);
-                setGameOver(false);
-                setShowModal(false);
-              }}
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white py-4 rounded-2xl font-extrabold text-lg shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition-all active:scale-95 flex items-center justify-center gap-2 group"
-            >
-              Tentar Novamente{" "}
-              <span className="group-hover:animate-spin">🎮</span>
-            </button>
+            {/* Ações do Modal */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setScore(0);
+                  setObstacleLeft(window.innerWidth + 50);
+                  setFallFrame(0);
+                  setGameOver(false);
+                  setShowModal(false);
+
+                  // Para o som triste e retoma a música tema
+                  if (tristezaRef.current) {
+                    tristezaRef.current.pause();
+                    tristezaRef.current.currentTime = 0;
+                  }
+                  if (audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.play().catch(() => {});
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white py-3.5 rounded-2xl font-extrabold text-base shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition-all active:scale-95 flex items-center justify-center gap-2 group"
+              >
+                Tentar Novamente{" "}
+                <span className="group-hover:animate-spin">🎮</span>
+              </button>
+
+              <button
+                onClick={() => setGame("hub")}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-2xl font-bold text-sm uppercase tracking-wider transition-colors active:scale-95"
+              >
+                Voltar ao Menu
+              </button>
+            </div>
           </div>
         </div>
       )}

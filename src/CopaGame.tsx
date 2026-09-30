@@ -9,7 +9,7 @@ import camisaChorando from "./assets/jump_game/camisa_branca_chorando.png";
 // Importando os áudios
 import tristezaSound from "./assets/jump_game/tristeza.mp3";
 import parabensSound from "./assets/jump_game/parabens.mp3";
-import copaMusic from "./assets/jump_game/copa.mp3"; // NOVA MÚSICA DE FUNDO
+import copaMusic from "./assets/jump_game/copa.mp3";
 
 interface Props {
   setGame: (game: string) => void;
@@ -29,7 +29,7 @@ export default function CopaGame({ setGame }: Props) {
   // Áudios
   const tristezaRef = useRef<HTMLAudioElement>(null);
   const parabensRef = useRef<HTMLAudioElement>(null);
-  const bgMusicRef = useRef<HTMLAudioElement>(null); // Ref para a música da Copa
+  const bgMusicRef = useRef<HTMLAudioElement>(null);
 
   // Lista de camisas
   const [shirts, setShirts] = useState<any[]>([]);
@@ -150,7 +150,7 @@ export default function CopaGame({ setGame }: Props) {
     [gameOver, gameWon, hasStarted],
   );
 
-  // Iniciar ou Reiniciar o Jogo (Controla a música da Copa)
+  // Iniciar o jogo
   const startGame = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setHasStarted(true);
@@ -160,6 +160,7 @@ export default function CopaGame({ setGame }: Props) {
     }
   };
 
+  // Reiniciar o jogo
   const restartGame = () => {
     scoreRef.current = 0;
     setScore(0);
@@ -168,7 +169,6 @@ export default function CopaGame({ setGame }: Props) {
     setGameOver(false);
     setGameWon(false);
 
-    // Retoma a música de fundo
     if (bgMusicRef.current) {
       bgMusicRef.current.currentTime = 0;
       bgMusicRef.current.play().catch(() => {});
@@ -258,29 +258,38 @@ export default function CopaGame({ setGame }: Props) {
 
       {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in zoom-in duration-500">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-[8px_8px_0_0_rgba(234,179,8,1)] border-4 border-green-700 text-center">
-            <h2 className="text-2xl font-black text-green-700 mb-2 uppercase tracking-wide">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in zoom-in duration-500">
+          <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] text-center relative overflow-hidden border border-white/50">
+            <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-green-500 via-yellow-400 to-green-600"></div>
+
+            <h2 className="text-2xl font-black text-green-700 mt-2 mb-2 uppercase tracking-wide">
               O Trauma da Copa! 🇧🇷
             </h2>
 
-            {/* Novas Copys Aplicadas */}
-            <p className="text-gray-700 font-medium my-6 leading-relaxed text-sm md:text-base bg-gray-50 p-4 rounded-xl border-2 border-dashed border-gray-300">
+            <p className="text-gray-600 font-medium my-4 leading-relaxed text-sm bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
               Tia Mônica saiu correndo do trabalho para ir no Betânia comprar
               uma camisa para você assistir ao jogo da Copa... Mas adivinha a
               cor que ela escolheu? 💀
             </p>
 
-            <div className="flex flex-col gap-3 mb-6 bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200 text-sm font-bold text-gray-800 text-left">
+            <div className="flex flex-col gap-2.5 mb-6 bg-yellow-50/60 p-4 rounded-2xl border border-yellow-100 text-xs font-bold text-gray-800 text-left">
               <div className="flex items-center gap-3">
-                <img src={camisaAmarela} className="w-8 h-8 object-contain" />
+                <img
+                  src={camisaAmarela}
+                  className="w-8 h-8 object-contain shrink-0"
+                  alt="Amarela"
+                />
                 <span className="text-green-700">
                   Pegue as amarelas (Tem que pegar 15)
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <img src={camisaBranca} className="w-8 h-8 object-contain" />
-                <span className="text-red-600">
+                <img
+                  src={camisaBranca}
+                  className="w-8 h-8 object-contain shrink-0"
+                  alt="Branca"
+                />
+                <span className="text-red-500">
                   Se pegar uma camisa branca você CHORA!
                 </span>
               </div>
@@ -288,7 +297,7 @@ export default function CopaGame({ setGame }: Props) {
 
             <button
               onClick={startGame}
-              className="w-full bg-green-500 hover:bg-green-600 text-white py-4 font-black text-xl border-b-4 border-green-700 uppercase shadow-sm active:translate-y-1 active:border-b-0 transition-all"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 rounded-2xl font-extrabold text-base shadow-[0_8px_20px_-6px_rgba(22,163,74,0.5)] transition-all active:scale-95 uppercase tracking-wider"
             >
               Ir para o Jogo! 🏃‍♀️
             </button>
@@ -296,66 +305,92 @@ export default function CopaGame({ setGame }: Props) {
         </div>
       )}
 
-      {/* MODAL DE VITÓRIA (Parabéns + Confetes) */}
+      {/* MODAL DE VITÓRIA */}
       {gameWon && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white/95 backdrop-blur-xl rounded-xl p-8 max-w-sm w-full shadow-[8px_8px_0_0_rgba(22,163,74,1)] border-4 border-green-500 text-center transform transition-all">
-            <div className="w-24 h-24 bg-green-100 flex items-center justify-center mx-auto mb-4 text-6xl border-4 border-green-300 rounded-full">
+          <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] text-center relative overflow-hidden border border-white/50">
+            <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-yellow-400 via-green-500 to-yellow-400"></div>
+
+            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 mt-2 text-5xl shadow-inner border border-green-100">
               🏆
             </div>
 
-            <h2 className="text-3xl font-black text-green-700 mb-4 leading-tight uppercase">
+            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-700 to-emerald-600 mb-2 leading-tight uppercase">
               Parabéns, Brunna!
             </h2>
 
-            <p className="text-gray-700 font-bold mb-6 leading-relaxed text-sm px-2">
-              Finalmente conseguiste uma camisa amarela para ver o jogo em paz!
+            <p className="text-gray-600 font-medium mb-6 leading-relaxed text-sm px-2">
+              Finalmente conseguiu uma camisa amarela para ver o jogo em paz!
               Feliz aniversário e que a vida te dê menos camisas da Betânia!
               🎂💚💛
             </p>
 
-            <button
-              onClick={restartGame}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-900 py-4 font-black text-xl border-b-4 border-yellow-600 uppercase shadow-sm active:translate-y-1 active:border-b-0 transition-all"
-            >
-              Jogar de Novo 🇧🇷
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={restartGame}
+                className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-green-950 py-3.5 rounded-2xl font-black text-base shadow-[0_8px_20px_-6px_rgba(234,179,8,0.5)] transition-all active:scale-95 uppercase tracking-wider"
+              >
+                Jogar de Novo 🇧🇷
+              </button>
+
+              <button
+                onClick={() => setGame("hub")}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-2xl font-bold text-sm uppercase tracking-wider transition-colors active:scale-95"
+              >
+                Voltar ao Menu
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* MODAL DE FIM DE JOGO (O Chilique) */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-[8px_8px_0_0_rgba(220,38,38,1)] border-4 border-red-600 text-center transform transition-all">
-            <div className="w-full flex justify-center mb-6 mt-2">
-              <div className="p-3 bg-white shadow-lg transform rotate-[-3deg] border-4 border-red-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 max-w-sm w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] text-center relative overflow-hidden border border-white/50">
+            <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-red-500 via-rose-500 to-red-600"></div>
+
+            {/* Imagem estilo Polaroid */}
+            <div className="w-full flex justify-center mb-4 mt-2">
+              <div className="p-2.5 bg-white rounded-2xl shadow-xl transform rotate-[-2deg] hover:rotate-0 transition-transform duration-300 border border-gray-100">
                 <img
                   src={camisaChorando}
                   alt="Brunna chorando com a camisa branca"
-                  className="w-full max-h-48 object-contain bg-gray-50"
+                  className="w-full max-h-36 object-contain rounded-lg bg-gray-50/50"
                 />
               </div>
             </div>
 
-            <h2 className="text-xl font-black text-red-600 mb-6 leading-tight italic">
+            <h2 className="text-sm font-bold text-red-600 mb-4 leading-snug italic px-1">
               "Como é que você teve coragem de comprar isso pra mim?
-              Horrorosa...essa camiseta horrosa logo para mim???"
+              Horrorosa... essa camiseta horrorosa logo para mim???"
             </h2>
 
-            <div className="bg-gray-100 p-4 mb-6 border-2 border-dashed border-gray-300">
-              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">
-                Camisas Amarelas Salvas
+            {/* Caixa de Placar moderna */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-3.5 mb-6 border border-red-100 shadow-inner">
+              <p className="text-[11px] text-red-400 uppercase tracking-widest font-black mb-0.5">
+                Camisas Salvas
               </p>
-              <p className="text-5xl font-black text-red-600">{score}</p>
+              <p className="text-4xl font-black text-red-600 drop-shadow-sm">
+                {score}
+              </p>
             </div>
 
-            <button
-              onClick={restartGame}
-              className="w-full bg-red-500 hover:bg-red-600 text-white py-4 font-black text-xl border-b-4 border-red-700 uppercase shadow-sm active:translate-y-1 active:border-b-0 transition-all"
-            >
-              Tentar de novo 😭
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={restartGame}
+                className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white py-3.5 rounded-2xl font-extrabold text-base shadow-[0_8px_20px_-6px_rgba(239,68,68,0.5)] transition-all active:scale-95 flex items-center justify-center gap-2 group uppercase tracking-wider"
+              >
+                Tentar de novo 😭
+              </button>
+
+              <button
+                onClick={() => setGame("hub")}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-2xl font-bold text-sm uppercase tracking-wider transition-colors active:scale-95"
+              >
+                Voltar ao Menu
+              </button>
+            </div>
           </div>
         </div>
       )}

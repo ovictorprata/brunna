@@ -46,18 +46,25 @@ const GAMES = [
     shadow: "shadow-purple-500/30",
   },
   {
-    id: "clean",
-    title: "Limpeza Surpresa",
-    emoji: "🧽",
-    gradient: "from-sky-400 to-indigo-500",
-    shadow: "shadow-indigo-500/30",
-  },
-  {
     id: "quiz",
     title: "Quiz da Brunna",
     emoji: "🧠",
     gradient: "from-amber-400 to-orange-500",
     shadow: "shadow-orange-500/30",
+  },
+  {
+    id: "whatsapp",
+    title: "O Interrogatório",
+    emoji: "📱",
+    gradient: "from-teal-400 to-emerald-500",
+    shadow: "shadow-teal-500/30",
+  },
+  {
+    id: "dara",
+    title: "A Dieta Impossível",
+    emoji: "🐶",
+    gradient: "from-yellow-400 to-amber-500",
+    shadow: "shadow-yellow-500/30",
   },
 ];
 

@@ -4,14 +4,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import rostoImg from "./assets/maze_game/rosto.png";
 import shoppingImg from "./assets/maze_game/shopping.png";
 
-// Áudio
+// Áudios
 import victoriaSound from "./assets/jump_game/parabens.mp3";
+import labirintoMusic from "./assets/maze_game/labirinto.mp3";
 
 interface Props {
   setGame: (game: string) => void;
 }
 
-// Grid do Labirinto Vertical Maior (11 colunas x 15 linhas)
+// Grid do Labirinto Vertical (11 colunas x 15 linhas)
 // 1 = Parede / Obstáculo, 0 = Caminho Livre
 const MAZE_GRID = [
   [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Entrada no topo (0, 1)
@@ -41,6 +42,7 @@ export default function MazeGame({ setGame }: Props) {
   const [moves, setMoves] = useState(0);
 
   const parabensRef = useRef<HTMLAudioElement>(null);
+  const bgMusicRef = useRef<HTMLAudioElement>(null);
   const playerPosRef = useRef(playerPos);
 
   useEffect(() => {
@@ -55,7 +57,6 @@ export default function MazeGame({ setGame }: Props) {
       const newRow = playerPosRef.current.row + dRow;
       const newCol = playerPosRef.current.col + dCol;
 
-      // Limites do grid
       if (
         newRow < 0 ||
         newRow >= MAZE_GRID.length ||
@@ -65,7 +66,6 @@ export default function MazeGame({ setGame }: Props) {
         return;
       }
 
-      // Colisão com paredes
       if (MAZE_GRID[newRow][newCol] === 1) {
         return;
       }
@@ -73,9 +73,13 @@ export default function MazeGame({ setGame }: Props) {
       setPlayerPos({ row: newRow, col: newCol });
       setMoves((prev) => prev + 1);
 
-      // Chegou na saída
       if (newRow === END_POS.row && newCol === END_POS.col) {
         setGameWon(true);
+
+        if (bgMusicRef.current) {
+          bgMusicRef.current.pause();
+        }
+
         if (parabensRef.current) {
           parabensRef.current.currentTime = 0;
           parabensRef.current.play().catch(() => {});
@@ -85,7 +89,6 @@ export default function MazeGame({ setGame }: Props) {
     [hasStarted, gameWon],
   );
 
-  // Suporte a teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W")
@@ -102,7 +105,6 @@ export default function MazeGame({ setGame }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [movePlayer]);
 
-  // Confetes ao vencer
   useEffect(() => {
     if (gameWon) {
       const script = document.createElement("script");
@@ -111,7 +113,7 @@ export default function MazeGame({ setGame }: Props) {
       script.onload = () => {
         // @ts-expect-error
         window.confetti({
-          particleCount: 300,
+          particleCount: 250,
           spread: 140,
           origin: { y: 0.3 },
           zIndex: 9999,
@@ -121,43 +123,53 @@ export default function MazeGame({ setGame }: Props) {
     }
   }, [gameWon]);
 
+  const startGame = () => {
+    setHasStarted(true);
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = 0.35;
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
+  };
+
   const restartGame = () => {
     setPlayerPos(START_POS);
     setGameWon(false);
     setMoves(0);
+
+    if (bgMusicRef.current) {
+      bgMusicRef.current.currentTime = 0;
+      bgMusicRef.current.play().catch(() => {});
+    }
   };
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-fuchsia-100 select-none touch-none font-sans flex flex-col items-center justify-between p-3">
+    <div className="relative w-full h-[100dvh] overflow-hidden bg-stone-100 select-none touch-none font-sans flex flex-col items-center justify-between p-3">
+      <audio ref={bgMusicRef} src={labirintoMusic} loop />
       <audio ref={parabensRef} src={victoriaSound} />
 
-      {/* Topo / Header */}
-      <div className="w-full max-w-md flex items-center justify-between z-30 pt-1">
+      {/* HEADER CENTRALIZADO */}
+      <div className="w-full max-w-sm flex flex-col items-center gap-1 z-30 pt-1">
         <button
           onClick={() => setGame("hub")}
-          className="px-4 py-1.5 bg-white text-fuchsia-700 font-bold rounded-full shadow-md border border-fuchsia-200 active:scale-95 transition-all text-xs"
+          className="text-stone-400 hover:text-stone-800 font-bold text-xs uppercase tracking-widest transition-colors py-1 px-4 rounded-full active:scale-95"
         >
-          ← Voltar
+          ◄ Voltar ao Menu
         </button>
 
-        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm text-xs font-black text-fuchsia-900 border border-fuchsia-200">
-          Passos: <span className="text-fuchsia-600">{moves}</span>
+        <div className="flex items-center gap-2 text-stone-500 font-bold text-xs uppercase tracking-wider">
+          <span>Passos</span>
+          <span className="bg-white px-2.5 py-0.5 rounded-full shadow-sm text-stone-900 font-black border border-stone-200">
+            {moves}
+          </span>
         </div>
       </div>
 
-      {/* Título */}
-      <div className="text-center my-1 z-20">
-        <h1 className="text-xl md:text-2xl font-black text-fuchsia-900 uppercase tracking-wide">
-          A Cobreola do Shopping 🛍️
-        </h1>
-      </div>
-
-      {/* ÁREA DO LABIRINTO COM SHOPPING EXTERNO */}
-      <div className="relative w-full max-w-[360px] flex-1 flex flex-col items-center justify-center my-auto">
-        {/* O Grid do Labirinto */}
-        <div className="w-full bg-slate-900 p-2 rounded-t-2xl shadow-2xl border-4 border-b-0 border-fuchsia-500">
+      {/* LABIRINTO COM SAÍDA E SHOPPING EM DESTAQUE */}
+      <div className="relative w-full max-w-[340px] flex-1 flex flex-col items-center justify-center my-auto">
+        <div className="w-full bg-slate-950 p-2.5 rounded-3xl shadow-xl border border-slate-800 relative">
           <div
-            className="grid w-full gap-0 rounded-lg overflow-hidden border border-slate-700"
+            className="grid w-full gap-0 rounded-2xl overflow-hidden border border-slate-800/80"
             style={{
               gridTemplateColumns: `repeat(${MAZE_GRID[0].length}, minmax(0, 1fr))`,
               gridTemplateRows: `repeat(${MAZE_GRID.length}, minmax(0, 1fr))`,
@@ -168,22 +180,30 @@ export default function MazeGame({ setGame }: Props) {
                 const isWall = cell === 1;
                 const isPlayer =
                   playerPos.row === rIdx && playerPos.col === cIdx;
+                const isExit = rIdx === END_POS.row && cIdx === END_POS.col;
 
                 return (
                   <div
                     key={`${rIdx}-${cIdx}`}
                     className={`aspect-square relative flex items-center justify-center ${
                       isWall
-                        ? "bg-slate-900"
-                        : "bg-fuchsia-50/90 border-[0.5px] border-fuchsia-200/40"
+                        ? "bg-slate-950"
+                        : isExit
+                          ? "bg-emerald-100/90 border border-emerald-300"
+                          : "bg-slate-100 border-[0.5px] border-slate-200/50"
                     }`}
                   >
-                    {/* Jogador */}
+                    {isExit && !isPlayer && (
+                      <span className="text-[10px] text-emerald-600 font-black animate-bounce">
+                        ↓
+                      </span>
+                    )}
+
                     {isPlayer && (
                       <img
                         src={rostoImg}
                         alt="Brunna"
-                        className="w-[95%] h-[95%] object-contain z-20 transition-all duration-100 drop-shadow-md"
+                        className="w-[90%] h-[90%] object-contain z-20 drop-shadow-md"
                       />
                     )}
                   </div>
@@ -193,85 +213,106 @@ export default function MazeGame({ setGame }: Props) {
           </div>
         </div>
 
-        {/* Destino Final Externo: O SHOPPING */}
-        <div className="w-full bg-gradient-to-b from-fuchsia-600 to-purple-700 py-2 px-4 rounded-b-2xl border-4 border-t-0 border-fuchsia-500 shadow-xl flex items-center justify-between">
-          <span className="text-white text-xs font-black uppercase tracking-wider">
-            Saindo do labirinto...
-          </span>
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-xl backdrop-blur-sm border border-white/30">
-            <span className="text-xs font-black text-white">SHOPPING</span>
+        {/* SHOPPING AMPLIADO COM INDICADOR DE SAÍDA */}
+        <div className="w-full flex flex-col items-center justify-center pt-2">
+          <div className="flex items-center gap-1.5 text-stone-400 font-black text-[10px] uppercase tracking-widest mb-1">
+            <span>Saída</span>
+            <span className="animate-bounce">↓</span>
+          </div>
+
+          <div className="flex items-center gap-3 bg-white/70 px-4 py-2 rounded-2xl border border-stone-200 shadow-sm backdrop-blur-sm">
             <img
               src={shoppingImg}
               alt="Shopping"
-              className="w-10 h-10 object-contain drop-shadow-lg animate-bounce"
+              className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-md"
             />
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
+                Shopping
+              </span>
+              <span className="text-[10px] font-bold text-emerald-600">
+                Destino Final 🛍️
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* D-PAD VIRTUAL PARA MOBILE */}
-      <div className="w-full max-w-[240px] flex flex-col items-center gap-1 my-1 z-30 pb-safe">
+      {/* D-PAD PADRONIZADO E APROXIMADO */}
+      <div className="grid grid-cols-3 gap-1.5 w-44 items-center justify-items-center mb-1 z-30 pb-safe">
+        <div />
         <button
           onClick={() => movePlayer(-1, 0)}
-          className="w-14 h-12 bg-fuchsia-600 active:bg-fuchsia-800 text-white font-black text-xl rounded-xl shadow-[0_3px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center"
+          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Cima"
         >
-          ▲
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M12 4l-8 8h5v8h6v-8h5z" />
+          </svg>
         </button>
-
-        <div className="flex justify-between w-full px-2">
-          <button
-            onClick={() => movePlayer(0, -1)}
-            className="w-14 h-12 bg-fuchsia-600 active:bg-fuchsia-800 text-white font-black text-xl rounded-xl shadow-[0_3px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center"
-          >
-            ◀
-          </button>
-          <button
-            onClick={() => movePlayer(0, 1)}
-            className="w-14 h-12 bg-fuchsia-600 active:bg-fuchsia-800 text-white font-black text-xl rounded-xl shadow-[0_3px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center"
-          >
-            ▶
-          </button>
-        </div>
+        <div />
 
         <button
-          onClick={() => movePlayer(1, 0)}
-          className="w-14 h-12 bg-fuchsia-600 active:bg-fuchsia-800 text-white font-black text-xl rounded-xl shadow-[0_3px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center"
+          onClick={() => movePlayer(0, -1)}
+          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Esquerda"
         >
-          ▼
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M4 12l8-8v5h8v6h-8v5z" />
+          </svg>
         </button>
+
+        <div className="w-4 h-4 rounded-full bg-stone-300/40" />
+
+        <button
+          onClick={() => movePlayer(0, 1)}
+          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Direita"
+        >
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M20 12l-8-8v5H4v6h8v5z" />
+          </svg>
+        </button>
+
+        <div />
+        <button
+          onClick={() => movePlayer(1, 0)}
+          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Baixo"
+        >
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M12 20l8-8h-5V4h-6v8H4z" />
+          </svg>
+        </button>
+        <div />
       </div>
 
-      {/* MODAL DE INTRODUÇÃO (HUMOR/ZUEIRA VICTOR & BRUNNA) */}
+      {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in zoom-in">
-          <div className="bg-white rounded-[2rem] p-6 max-w-md w-full shadow-2xl text-center border-4 border-fuchsia-400 max-h-[90vh] overflow-y-auto">
-            <div className="w-16 h-16 bg-fuchsia-100 rounded-full flex items-center justify-center mx-auto mb-2 text-4xl shadow-inner border border-fuchsia-200">
-              💳
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-5 animate-in zoom-in duration-300">
+          <div className="bg-white rounded-3xl p-7 max-w-sm w-full shadow-2xl text-center border border-stone-100">
+            <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-inner border border-stone-100">
+              🛍️
             </div>
 
-            <h2 className="text-2xl font-black text-fuchsia-700 mb-2 uppercase">
-              Missão: Falir o Cartão! 🛍️
+            <h2 className="text-xl font-black text-stone-900 mb-2 uppercase tracking-wide">
+              Fuga para o Shopping
             </h2>
 
-            <p className="text-gray-700 font-medium my-3 leading-relaxed text-sm bg-fuchsia-50 p-4 rounded-xl border border-fuchsia-100">
-              Brunna, nós sabemos que se deixar, você mora dentro do shopping!
+            <p className="text-stone-500 font-medium my-4 leading-relaxed text-xs md:text-sm bg-stone-50 p-4 rounded-2xl border border-stone-100">
+              Brunna, sabemos que qualquer desculpa é motivo para ir ao shopping
+              torrar limite! 😜
               <br />
               <br />
-              Eu (Victor, seu irmão favorito 😜) preparei este labirinto
-              especialmente para você encontrar o caminho até o seu lugar
-              sagrado de torrar dinheiro.
+              Navegue pelo labirinto usando o controle abaixo e leve a sua
+              personagem até a saída indicada para o shopping.
             </p>
 
-            <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4 text-xs text-gray-600 font-bold">
-              💡 Use os botões roxos abaixo para guiar sua cabeça até a saída no
-              Shopping!
-            </div>
-
             <button
-              onClick={() => setHasStarted(true)}
-              className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-3.5 rounded-2xl font-black text-lg shadow-[0_5px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all uppercase"
+              onClick={startGame}
+              className="w-full bg-stone-900 hover:bg-black text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all mt-2"
             >
-              Bora Gastar! 💳
+              Iniciar Desafio
             </button>
           </div>
         </div>
@@ -279,37 +320,40 @@ export default function MazeGame({ setGame }: Props) {
 
       {/* MODAL DE VITÓRIA */}
       {gameWon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-[2rem] p-6 max-w-md w-full shadow-2xl text-center border-4 border-fuchsia-500">
-            <div className="w-20 h-20 bg-fuchsia-100 rounded-full flex items-center justify-center mx-auto mb-3 text-5xl shadow-inner border border-fuchsia-200">
-              🛍️
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-5 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl p-7 max-w-sm w-full shadow-2xl text-center border border-stone-100 flex flex-col items-center">
+            <div className="w-28 h-28 bg-stone-50 rounded-full flex items-center justify-center mb-4 p-3 border border-stone-100">
+              <img
+                src={shoppingImg}
+                alt="Shopping alcançado"
+                className="w-full h-full object-contain drop-shadow-md"
+              />
             </div>
 
-            <h2 className="text-2xl font-black text-fuchsia-700 mb-2 uppercase">
-              SHOPPING ALCANÇADO!
+            <h2 className="text-2xl font-black text-stone-900 mb-2 uppercase tracking-wide">
+              Destino Alcançado!
             </h2>
 
-            <p className="text-gray-700 font-bold mb-5 text-sm bg-fuchsia-50 p-4 rounded-xl border border-fuchsia-100">
-              Parabéns, Brunna! Você driblou todas as barreiras e completou o
-              labirinto em{" "}
-              <span className="text-fuchsia-700">{moves} passos</span>.
-              <br />
-              <br />
-              <span className="text-fuchsia-800 italic">
-                O limite do cartão que lute hoje! Ass: Victor.
-              </span>
-            </p>
+            <div className="bg-stone-50 rounded-2xl p-4 mb-6 w-full border border-stone-100">
+              <p className="text-stone-600 text-xs md:text-sm font-medium leading-relaxed">
+                Superou o labirinto em{" "}
+                <span className="font-black text-stone-900">
+                  {moves} passos
+                </span>{" "}
+                e chegou a tempo das lojas abrirem. O limite do cartão que lute!
+              </p>
+            </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5 w-full">
               <button
                 onClick={restartGame}
-                className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-3 rounded-2xl font-black text-base shadow-[0_4px_0_0_rgba(162,28,175,1)] active:translate-y-1 active:shadow-none transition-all uppercase"
+                className="w-full bg-stone-900 hover:bg-black text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
               >
-                Gastar Mais Um Pouco (Repetir) 🔄
+                Jogar Novamente
               </button>
               <button
                 onClick={() => setGame("hub")}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-2xl font-bold text-sm transition-all"
+                className="w-full bg-transparent text-stone-400 hover:text-stone-600 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-colors"
               >
                 Voltar ao Menu
               </button>
