@@ -169,7 +169,7 @@ export default function Hub({ setGame }: Props) {
         {step === 0 && (
           <div className="animate-in fade-in zoom-in duration-700">
             <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mb-6 drop-shadow-lg">
-              Feliz Aniversário, Maninha! 🎉
+              Feliz Aniversário, fedorentaaaa! 🎉
             </h1>
 
             <div className="w-44 h-44 mx-auto mb-6 rounded-full p-1.5 bg-gradient-to-tr from-pink-500 to-purple-500 shadow-[0_0_40px_rgba(236,72,153,0.3)]">
