@@ -13,7 +13,6 @@ interface Props {
 }
 
 // Grid do Labirinto Vertical (11 colunas x 15 linhas)
-// 1 = Parede / Obstáculo, 0 = Caminho Livre
 const MAZE_GRID = [
   [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Entrada no topo (0, 1)
   [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
@@ -29,7 +28,7 @@ const MAZE_GRID = [
   [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
   [1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Saída na base (14, 7) -> Vai pro Shopping!
+  [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1], // Saída na base (14, 7)
 ];
 
 const START_POS = { row: 0, col: 1 };
@@ -49,7 +48,6 @@ export default function MazeGame({ setGame }: Props) {
     playerPosRef.current = playerPos;
   }, [playerPos]);
 
-  // Movimentação do jogador
   const movePlayer = useCallback(
     (dRow: number, dCol: number) => {
       if (!hasStarted || gameWon) return;
@@ -144,32 +142,33 @@ export default function MazeGame({ setGame }: Props) {
   };
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-stone-100 select-none touch-none font-sans flex flex-col items-center justify-between p-3">
+    <div className="fixed inset-0 h-[100dvh] w-full overflow-hidden bg-stone-100 select-none touch-none font-sans flex flex-col items-center justify-between p-2">
       <audio ref={bgMusicRef} src={labirintoMusic} loop />
       <audio ref={parabensRef} src={victoriaSound} />
 
-      {/* HEADER CENTRALIZADO */}
-      <div className="w-full max-w-sm flex flex-col items-center gap-1 z-30 pt-1">
+      {/* HEADER COMPACTO */}
+      <div className="w-full max-w-xs flex flex-col items-center gap-0.5 z-30 pt-1 shrink-0">
         <button
           onClick={() => setGame("hub")}
-          className="text-stone-400 hover:text-stone-800 font-bold text-xs uppercase tracking-widest transition-colors py-1 px-4 rounded-full active:scale-95"
+          className="text-stone-400 hover:text-stone-800 font-bold text-[11px] uppercase tracking-widest transition-colors py-0.5 px-3 rounded-full active:scale-95"
         >
           ◄ Voltar ao Menu
         </button>
 
-        <div className="flex items-center gap-2 text-stone-500 font-bold text-xs uppercase tracking-wider">
+        <div className="flex items-center gap-1.5 text-stone-500 font-bold text-[11px] uppercase tracking-wider">
           <span>Passos</span>
-          <span className="bg-white px-2.5 py-0.5 rounded-full shadow-sm text-stone-900 font-black border border-stone-200">
+          <span className="bg-white px-2 py-0.2 rounded-full shadow-sm text-stone-900 font-black border border-stone-200">
             {moves}
           </span>
         </div>
       </div>
 
-      {/* LABIRINTO COM SAÍDA E SHOPPING EM DESTAQUE */}
-      <div className="relative w-full max-w-[340px] flex-1 flex flex-col items-center justify-center my-auto">
-        <div className="w-full bg-slate-950 p-2.5 rounded-3xl shadow-xl border border-slate-800 relative">
+      {/* ÁREA CENTRAL: LABIRINTO COM ALTURA LIMITADA À TELA */}
+      <div className="w-full flex-1 flex flex-col items-center justify-center min-h-0 py-1">
+        {/* Labirinto proporcional que nunca vaza da tela */}
+        <div className="h-full max-h-[46vh] aspect-[11/15] bg-slate-950 p-1.5 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-center shrink-0">
           <div
-            className="grid w-full gap-0 rounded-2xl overflow-hidden border border-slate-800/80"
+            className="w-full h-full grid gap-0 rounded-xl overflow-hidden border border-slate-800/80"
             style={{
               gridTemplateColumns: `repeat(${MAZE_GRID[0].length}, minmax(0, 1fr))`,
               gridTemplateRows: `repeat(${MAZE_GRID.length}, minmax(0, 1fr))`,
@@ -185,7 +184,7 @@ export default function MazeGame({ setGame }: Props) {
                 return (
                   <div
                     key={`${rIdx}-${cIdx}`}
-                    className={`aspect-square relative flex items-center justify-center ${
+                    className={`relative flex items-center justify-center ${
                       isWall
                         ? "bg-slate-950"
                         : isExit
@@ -194,7 +193,7 @@ export default function MazeGame({ setGame }: Props) {
                     }`}
                   >
                     {isExit && !isPlayer && (
-                      <span className="text-[10px] text-emerald-600 font-black animate-bounce">
+                      <span className="text-[9px] text-emerald-600 font-black animate-bounce">
                         ↓
                       </span>
                     )}
@@ -203,7 +202,7 @@ export default function MazeGame({ setGame }: Props) {
                       <img
                         src={rostoImg}
                         alt="Brunna"
-                        className="w-[90%] h-[90%] object-contain z-20 drop-shadow-md"
+                        className="w-[85%] h-[85%] object-contain z-20 drop-shadow-md"
                       />
                     )}
                   </div>
@@ -213,37 +212,31 @@ export default function MazeGame({ setGame }: Props) {
           </div>
         </div>
 
-        {/* SHOPPING AMPLIADO COM INDICADOR DE SAÍDA */}
-        <div className="w-full flex flex-col items-center justify-center pt-2">
-          <div className="flex items-center gap-1.5 text-stone-400 font-black text-[10px] uppercase tracking-widest mb-1">
-            <span>Saída</span>
-            <span className="animate-bounce">↓</span>
-          </div>
-
-          <div className="flex items-center gap-3 bg-white/70 px-4 py-2 rounded-2xl border border-stone-200 shadow-sm backdrop-blur-sm">
-            <img
-              src={shoppingImg}
-              alt="Shopping"
-              className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-md"
-            />
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
-                Shopping
-              </span>
-              <span className="text-[10px] font-bold text-emerald-600">
-                Destino Final 🛍️
-              </span>
-            </div>
+        {/* SHOPPING DESTINO - COMPACTO */}
+        <div className="flex items-center gap-2 mt-1 bg-white/80 px-3 py-1 rounded-xl border border-stone-200 shadow-sm shrink-0">
+          <span className="text-[10px] text-stone-400 font-black">SAÍDA ↓</span>
+          <img
+            src={shoppingImg}
+            alt="Shopping"
+            className="w-7 h-7 object-contain drop-shadow"
+          />
+          <div className="flex flex-col text-left leading-tight">
+            <span className="text-[10px] font-black text-stone-800 uppercase">
+              Shopping
+            </span>
+            <span className="text-[8px] font-bold text-emerald-600">
+              Destino Final 🛍️
+            </span>
           </div>
         </div>
       </div>
 
-      {/* D-PAD PADRONIZADO E APROXIMADO */}
-      <div className="grid grid-cols-3 gap-1.5 w-44 items-center justify-items-center mb-1 z-30 pb-safe">
+      {/* D-PAD VIRTUAL TOTALMENTE VISÍVEL */}
+      <div className="grid grid-cols-3 gap-1.5 w-36 items-center justify-items-center mb-2 z-30 shrink-0">
         <div />
         <button
           onClick={() => movePlayer(-1, 0)}
-          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          className="w-11 h-11 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Cima"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -254,7 +247,7 @@ export default function MazeGame({ setGame }: Props) {
 
         <button
           onClick={() => movePlayer(0, -1)}
-          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          className="w-11 h-11 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Esquerda"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -262,11 +255,11 @@ export default function MazeGame({ setGame }: Props) {
           </svg>
         </button>
 
-        <div className="w-4 h-4 rounded-full bg-stone-300/40" />
+        <div className="w-3 h-3 rounded-full bg-stone-300/40" />
 
         <button
           onClick={() => movePlayer(0, 1)}
-          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          className="w-11 h-11 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Direita"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -277,7 +270,7 @@ export default function MazeGame({ setGame }: Props) {
         <div />
         <button
           onClick={() => movePlayer(1, 0)}
-          className="w-12 h-12 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow-md border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
+          className="w-11 h-11 bg-white active:bg-stone-200 text-stone-700 rounded-xl shadow border border-stone-200 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Baixo"
         >
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -289,28 +282,27 @@ export default function MazeGame({ setGame }: Props) {
 
       {/* MODAL DE INTRODUÇÃO */}
       {!hasStarted && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-5 animate-in zoom-in duration-300">
-          <div className="bg-white rounded-3xl p-7 max-w-sm w-full shadow-2xl text-center border border-stone-100">
-            <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-inner border border-stone-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-4 animate-in zoom-in duration-300">
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center border border-stone-100">
+            <div className="w-14 h-14 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner border border-stone-100">
               🛍️
             </div>
 
-            <h2 className="text-xl font-black text-stone-900 mb-2 uppercase tracking-wide">
+            <h2 className="text-lg font-black text-stone-900 mb-2 uppercase tracking-wide">
               Fuga para o Shopping
             </h2>
 
-            <p className="text-stone-500 font-medium my-4 leading-relaxed text-xs md:text-sm bg-stone-50 p-4 rounded-2xl border border-stone-100">
-              Brunna, sabemos que qualquer desculpa é motivo para ir ao shopping
-              torrar limite! 😜
+            <p className="text-stone-500 font-medium my-3 leading-relaxed text-xs bg-stone-50 p-3 rounded-2xl border border-stone-100">
+              Brunna, qualquer desculpa é motivo para ir ao shopping torrar
+              limite! 😜
               <br />
               <br />
-              Navegue pelo labirinto usando o controle abaixo e leve a sua
-              personagem até a saída indicada para o shopping.
+              Navegue pelo labirinto e leve sua personagem até a saída indicada.
             </p>
 
             <button
               onClick={startGame}
-              className="w-full bg-stone-900 hover:bg-black text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all mt-2"
+              className="w-full bg-stone-900 hover:bg-black text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all mt-1"
             >
               Iniciar Desafio
             </button>
@@ -320,9 +312,9 @@ export default function MazeGame({ setGame }: Props) {
 
       {/* MODAL DE VITÓRIA */}
       {gameWon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-5 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl p-7 max-w-sm w-full shadow-2xl text-center border border-stone-100 flex flex-col items-center">
-            <div className="w-28 h-28 bg-stone-50 rounded-full flex items-center justify-center mb-4 p-3 border border-stone-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center border border-stone-100 flex flex-col items-center">
+            <div className="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mb-3 p-3 border border-stone-100">
               <img
                 src={shoppingImg}
                 alt="Shopping alcançado"
@@ -330,12 +322,12 @@ export default function MazeGame({ setGame }: Props) {
               />
             </div>
 
-            <h2 className="text-2xl font-black text-stone-900 mb-2 uppercase tracking-wide">
+            <h2 className="text-xl font-black text-stone-900 mb-2 uppercase tracking-wide">
               Destino Alcançado!
             </h2>
 
-            <div className="bg-stone-50 rounded-2xl p-4 mb-6 w-full border border-stone-100">
-              <p className="text-stone-600 text-xs md:text-sm font-medium leading-relaxed">
+            <div className="bg-stone-50 rounded-2xl p-3 mb-5 w-full border border-stone-100">
+              <p className="text-stone-600 text-xs font-medium leading-relaxed">
                 Superou o labirinto em{" "}
                 <span className="font-black text-stone-900">
                   {moves} passos
@@ -344,16 +336,16 @@ export default function MazeGame({ setGame }: Props) {
               </p>
             </div>
 
-            <div className="flex flex-col gap-2.5 w-full">
+            <div className="flex flex-col gap-2 w-full">
               <button
                 onClick={restartGame}
-                className="w-full bg-stone-900 hover:bg-black text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                className="w-full bg-stone-900 hover:bg-black text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
               >
                 Jogar Novamente
               </button>
               <button
                 onClick={() => setGame("hub")}
-                className="w-full bg-transparent text-stone-400 hover:text-stone-600 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-colors"
+                className="w-full bg-transparent text-stone-400 hover:text-stone-600 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-colors"
               >
                 Voltar ao Menu
               </button>
