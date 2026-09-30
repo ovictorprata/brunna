@@ -213,9 +213,7 @@ export default function Hub({ setGame }: Props) {
             </h2>
 
             <p className="text-gray-300 text-sm mb-8 leading-relaxed bg-white/10 p-5 rounded-2xl border border-white/10 backdrop-blur-md">
-              O tombo histórico pulando corda, o surto da camisa da Copa, o
-              peixe afogado em Toddy e o interrogatório com o Marcos. Tudo virou
-              fase jogável!
+              Vamos ver o que tem de micooooo
             </p>
 
             <button
