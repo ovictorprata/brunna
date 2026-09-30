@@ -6,6 +6,7 @@ import CleanGame from "./CleanGame";
 import CopaGame from "./CopaGame";
 import BabyGame from "./BabyGame";
 import QuizGame from "./QuizGame";
+import FishGame from "./FishGame";
 
 export default function App() {
   const [currentGame, setCurrentGame] = useState<string>("hub");
@@ -19,6 +20,7 @@ export default function App() {
       {currentGame === "copa" && <CopaGame setGame={setCurrentGame} />}
       {currentGame === "baby" && <BabyGame setGame={setCurrentGame} />}
       {currentGame === "quiz" && <QuizGame setGame={setCurrentGame} />}
+      {currentGame === "peixe" && <FishGame setGame={setCurrentGame} />}
     </>
   );
 }
