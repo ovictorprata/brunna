@@ -7,4 +7,5 @@ export default defineConfig({
     react(),
     tailwindcss(), // <-- Adicione esta linha
   ],
+  base: "/brunna/",
 });

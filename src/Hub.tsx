@@ -1,5 +1,3 @@
-import React from "react";
-
 const NOME_IRMA = "Sua Irmã";
 
 interface Props {
